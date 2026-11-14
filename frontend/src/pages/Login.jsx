@@ -65,7 +65,12 @@ export default function Login() {
     setLoading(false);
 
     if (res.success && res.token && res.user) {
+      // 📌 हे टोकन आणि युजर ब्राउझरमध्ये सेव्ह करणे अत्यंत आवश्यक आहे!
+      localStorage.setItem('token', res.token);
+      localStorage.setItem('user', JSON.stringify(res.user));
+
       login(res.user, res.token);
+
       if (res.user.role === 'admin') {
         navigate('/admin');
       } else {
@@ -73,7 +78,6 @@ export default function Login() {
       }
     } else {
       setErrorMsg(res.message || 'लॉगिन अयशस्वी. कृपया तपशील तपासा.');
-      // Refresh captcha on failed attempt
       loadCaptcha();
     }
   };
