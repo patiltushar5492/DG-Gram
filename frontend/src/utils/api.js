@@ -1,6 +1,6 @@
 export async function apiRequest(endpoint, options = {}) {
   // ही ओळ Vercel वरून Render च्या बॅकएंडची लिंक ऑटोमॅटिक शोधेल
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_BASE_URL = import.meta.env.VITE_API_URL ;
   
   const url = `${API_BASE_URL}/api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
 
