@@ -24,3 +24,14 @@ export async function apiRequest(endpoint, options = {}) {
     return { success: false, message: 'सर्व्हरशी संपर्क साधण्यात त्रुटी आली.' };
   }
 }
+  // <--- हा apiRequest चा शेवटचा ब्रॅकेट आहे, त्याच्या खाली हे टाक:
+
+    // 📌 इथे टाकायचं आहे (सगळ्यात शेवटी):
+    export const getFileUrl = (fileUrl) => {
+      if (!fileUrl) return '#';
+      if (fileUrl.startsWith('http') || fileUrl.startsWith('blob')) {
+        return fileUrl;
+      }
+      const cleanPath = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+      return `https://dg-gram.onrender.com${cleanPath}`;
+    };
