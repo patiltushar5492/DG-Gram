@@ -20,7 +20,7 @@ import {
 // The backend Express server always serves uploaded files at port 5000.
 // Using an absolute URL guarantees the browser opens the PDF directly
 // and never accidentally routes the request to the Vite dev-server (port 5173).
-const BACKEND_ORIGIN = 'http://localhost:5000';
+const BACKEND_ORIGIN = import.meta.env.VITE_API_URL || 'https://dg-gram.onrender.com';
 
 /**
  * Resolve a document's usable absolute URL.
