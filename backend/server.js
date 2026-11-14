@@ -1112,10 +1112,3 @@ app.listen(PORT, () => {
   console.log(`👉 Default Admin: admin@grampanchayat.gov.in / Admin@123`);
   console.log(`================================================================`);
 });
-// Start Server
-app.listen(PORT, () => {
-  console.log(`================================================================`);
-  console.log(`🏛️ Gram Panchayat Gadan Budruk Server Running on Port ${PORT}`);
-  console.log(`👉 Default Admin: admin@grampanchayat.gov.in / Admin@123`);
-  console.log(`================================================================`);
-});
