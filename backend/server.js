@@ -1067,7 +1067,51 @@ app.use((err, req, res, next) => {
   console.error("Backend Error:", err);
   res.status(500).json({ success: false, message: err.message || 'सर्व्हर अंतर्गत त्रुटी उद्भवली आहे.' });
 });
+// =============================================================
+// डिफॉल्ट ॲडमिन युजर आपोआप तयार करणारे फंक्शन (Auto-Create Default Admin)
+// =============================================================
+const ensureDefaultAdmin = () => {
+  try {
+    const db = getDB();
+    if (!db.users) db.users = [];
 
+    const adminEmail = 'admin@grampanchayat.gov.in';
+    const existingAdmin = db.users.find(u => u.email && u.email.toLowerCase() === adminEmail.toLowerCase());
+
+    if (!existingAdmin) {
+      const hashedPassword = bcrypt.hashSync('Admin@123', 10);
+      const defaultAdmin = {
+        id: 'usr_admin_' + Date.now(),
+        name: 'ग्रामपंचायत प्रशासक (Gramsevak Admin)',
+        email: adminEmail,
+        mobile: '9876543210',
+        passwordHash: hashedPassword,
+        role: 'admin',
+        address: 'गाळण बुद्रुक, ता. पाचोरा, जि. जळगाव',
+        createdAt: new Date().toISOString()
+      };
+
+      db.users.push(defaultAdmin);
+      saveDB(db);
+      console.log('✅ Default Admin Account Created Successfully!');
+    } else {
+      console.log('ℹ️ Default Admin already exists in database.');
+    }
+  } catch (err) {
+    console.error('❌ Error creating default admin:', err);
+  }
+};
+
+// **सर्व्हर चालू होण्यापूर्वी हे फंक्शन इथे कॉल करा:**
+ensureDefaultAdmin();
+
+// Start Server (हा भाग आधीपासूनच तुझ्या फाईलच्या शेवटी आहे)
+app.listen(PORT, () => {
+  console.log(`================================================================`);
+  console.log(`🏛️ Gram Panchayat Gadan Budruk Server Running on Port ${PORT}`);
+  console.log(`👉 Default Admin: admin@grampanchayat.gov.in / Admin@123`);
+  console.log(`================================================================`);
+});
 // Start Server
 app.listen(PORT, () => {
   console.log(`================================================================`);
