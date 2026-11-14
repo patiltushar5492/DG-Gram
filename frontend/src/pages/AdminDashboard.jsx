@@ -44,15 +44,6 @@ export default function AdminDashboard() {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Active Admin Tabs:
-  // 1: Applications (दाखले व्यवस्थापन)
-  // 2: Grievances (तक्रार निवारण)
-  // 3: Certificate Types (दाखला प्रकार CMS)
-  // 4: Bank & Payment Settings (बँक व देयक खाते CMS)
-  // 5: Drag & Drop GR Upload (शासन निर्णय PDF अपलोड)
-  // 6: Village Content & Statistics (गाव सांख्यिकी व माहिती CMS)
-  // 7: Hero Slider & Ticker (बॅनर व सूचना पट्टी)
-  // 8: Development Works (विकासकामे)
   const [activeTab, setActiveTab] = useState('applications');
 
   // Stats
@@ -172,7 +163,6 @@ export default function AdminDashboard() {
 
   // --- ACTIONS ---
 
-  // Applications Approval
   const handleUpdateAppStatus = async (id, status, customRemarks = null) => {
     let remarks = customRemarks;
     if (remarks === null) {
@@ -200,7 +190,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Grievance Status Update
   const handleSaveGrievanceResolution = async (e) => {
     e.preventDefault();
     if (!selectedGrievanceForResolution) return;
@@ -222,7 +211,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Dynamic Certificate Types (CMS Module 2)
   const handleAddCertType = async (e) => {
     e.preventDefault();
     if (!newCertType.nameMr) return;
@@ -256,7 +244,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Payment Settings (CMS Module 3)
   const handleSavePaymentSettings = async (e) => {
     e.preventDefault();
     const res = await apiRequest('/admin/payment-settings', {
@@ -269,7 +256,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Drag & Drop GR Upload (CMS Module 4)
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -318,8 +304,9 @@ export default function AdminDashboard() {
     }
 
     try {
-      const token = localStorage.getItem('dg_gram_token');
-      const res = await fetch('/api/admin/government-grs/upload', {
+      const token = localStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dg-gram.onrender.com';
+      const res = await fetch(`${API_BASE_URL}/api/admin/government-grs/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -357,7 +344,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Village Profile & Statistics CMS (Module 1)
   const handleSaveVillageProfile = async (e) => {
     e.preventDefault();
     const res = await apiRequest('/admin/village-profile', {
@@ -370,7 +356,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Hero Slider & Ticker
   const handleAddSlide = async (e) => {
     e.preventDefault();
     if (!newSlide.title) return;
@@ -414,7 +399,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Development Works
   const handleAddWork = async (e) => {
     e.preventDefault();
     if (!newWork.title) return;
@@ -552,7 +536,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Aaple Sarkar Style Application Review & Document Verification Modal */}
+      {/* Application Review & Document Verification Modal */}
       {selectedAppForReview && (
         <ApplicationReviewModal
           application={selectedAppForReview}
@@ -658,9 +642,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* ============================================================== */}
-      {/* TAB 1: APPLICATIONS APPROVAL & CERTIFICATE GENERATION */}
-      {/* ============================================================== */}
+      {/* TAB 1: APPLICATIONS APPROVAL */}
       {activeTab === 'applications' && (
         <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 no-print">
           <div>
@@ -711,7 +693,6 @@ export default function AdminDashboard() {
                       )}
                     </td>
                     <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
-                      {/* Review & Verification Modal Trigger Button */}
                       <button
                         onClick={() => setSelectedAppForReview(app)}
                         className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-lg text-xs font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
@@ -759,9 +740,7 @@ export default function AdminDashboard() {
         </section>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 2: COMPLAINT / GRIEVANCE MANAGEMENT */}
-      {/* ============================================================== */}
+      {/* TAB 2: GRIEVANCES */}
       {activeTab === 'grievances' && (
         <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 no-print">
           <div className="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -927,20 +906,16 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 3: DYNAMIC CERTIFICATE TYPES MANAGEMENT (CMS MODULE 2) */}
-      {/* ============================================================== */}
+      {/* TAB 3: DYNAMIC CERTIFICATE TYPES */}
       {activeTab === 'certTypes' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 no-print">
-          
-          {/* Add Certificate Type Form */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 lg:col-span-1">
             <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Plus className="w-5 h-5 text-indigo-600" />
               <span>नवीन दाखला प्रकार जोडा (Add Certificate)</span>
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              येथे जोडलेला नवीन दाखला थेट मुख्य संकेतस्थळावर नागरी अर्जासाठी उपलब्ध होतो. (उदा. गाव नमुना नंबर ८ उतारा, ना हरकत प्रमाणपत्र).
+              येथे जोडलेला नवीन दाखला थेट मुख्य संकेतस्थळावर नागरी अर्जासाठी उपलब्ध होतो.
             </p>
 
             <form onSubmit={handleAddCertType} className="space-y-3">
@@ -1010,7 +985,6 @@ export default function AdminDashboard() {
             </form>
           </div>
 
-          {/* List of Dynamic Certificate Types */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 lg:col-span-2">
             <h3 className="text-base font-bold text-slate-900">
               सक्रिय दाखले व प्रमाणपत्र प्रकार ({certificateTypes.length})
@@ -1044,13 +1018,10 @@ export default function AdminDashboard() {
               ))}
             </div>
           </div>
-
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 4: BANK ACCOUNT & PAYMENT SETTINGS (CMS MODULE 3) */}
-      {/* ============================================================== */}
+      {/* TAB 4: BANK & PAYMENT SETTINGS */}
       {activeTab === 'payment' && paymentSettings && (
         <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 no-print max-w-3xl mx-auto">
           <div className="border-b border-slate-100 pb-4">
@@ -1155,13 +1126,9 @@ export default function AdminDashboard() {
         </section>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 5: DRAG & DROP GOVERNMENT GR PDF UPLOAD (CMS MODULE 4) */}
-      {/* ============================================================== */}
+      {/* TAB 5: GR PDF UPLOAD */}
       {activeTab === 'grUpload' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 no-print">
-          
-          {/* Upload Area */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 lg:col-span-1">
             <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <FileUp className="w-5 h-5 text-amber-600" />
@@ -1206,7 +1173,6 @@ export default function AdminDashboard() {
                 />
               </div>
 
-              {/* Drag and Drop Zone */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">अधिकृत PDF फाईल:</label>
                 <div
@@ -1255,7 +1221,6 @@ export default function AdminDashboard() {
             </form>
           </div>
 
-          {/* List of GRs */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 lg:col-span-2">
             <h3 className="text-base font-bold text-slate-900">
               पोर्टलवरील सर्व शासन निर्णय व परिपत्रके ({grs.length})
@@ -1284,14 +1249,14 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => window.open(`/api/government-grs/${g.id}/download`, '_blank')}
-                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-semibold"
+                      onClick={() => window.open(`https://dg-gram.onrender.com/api/government-grs/${g.id}/download`, '_blank')}
+                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-semibold cursor-pointer"
                     >
                       पहा
                     </button>
                     <button
                       onClick={() => handleDeleteGR(g.id)}
-                      className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50"
+                      className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1300,13 +1265,10 @@ export default function AdminDashboard() {
               ))}
             </div>
           </div>
-
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 6: VILLAGE CONTENT & STATISTICS CMS (CMS MODULE 1) */}
-      {/* ============================================================== */}
+      {/* TAB 6: VILLAGE CMS */}
       {activeTab === 'villageCms' && villageProfile && (
         <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 no-print max-w-4xl mx-auto">
           <div className="border-b border-slate-100 pb-4">
@@ -1320,8 +1282,6 @@ export default function AdminDashboard() {
           </div>
 
           <form onSubmit={handleSaveVillageProfile} className="space-y-6">
-            
-            {/* 1. Statistics */}
             <div className="space-y-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1">
                 १. गाव सांख्यिकी आकडेवारी (Village Statistics)
@@ -1381,7 +1341,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* 2. About Informational Sections */}
             <div className="space-y-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1">
                 २. माहितीपर विभाग (Geographic, Education & Health Details)
@@ -1440,9 +1399,7 @@ export default function AdminDashboard() {
         </section>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 7: HERO SLIDER & NOTICE TICKER CONTROL */}
-      {/* ============================================================== */}
+      {/* TAB 7: SLIDER & TICKER */}
       {activeTab === 'slider' && (
         <div className="space-y-8 no-print">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-4">
@@ -1569,9 +1526,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* TAB 8: DEVELOPMENT WORKS */}
-      {/* ============================================================== */}
+      {/* TAB 8: WORKS */}
       {activeTab === 'works' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 no-print">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 lg:col-span-1">
