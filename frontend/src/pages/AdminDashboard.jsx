@@ -41,15 +41,13 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminDashboard() {
-  const { user, isAdmin } = useAuth();
+  // 👇 येथे सेफ्टी चेक लावला आहे
+  const { user, isAdmin } = useAuth() || {};
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('applications');
 
-  // Stats
   const [stats, setStats] = useState(null);
-
-  // Data states
   const [applications, setApplications] = useState([]);
   const [grievances, setGrievances] = useState([]);
   const [certificateTypes, setCertificateTypes] = useState([]);
@@ -60,7 +58,6 @@ export default function AdminDashboard() {
   const [works, setWorks] = useState([]);
   const [grs, setGrs] = useState([]);
 
-  // Modals & form state
   const [certToPrint, setCertToPrint] = useState(null);
   const [selectedAppForReview, setSelectedAppForReview] = useState(null);
   const [alertNotice, setAlertNotice] = useState({ text: '', type: '' });
@@ -68,7 +65,6 @@ export default function AdminDashboard() {
   const [resolutionInput, setResolutionInput] = useState('');
   const [resolutionStatus, setResolutionStatus] = useState('resolved');
 
-  // 1. Dynamic Certificate Types Form State
   const [newCertType, setNewCertType] = useState({
     nameMr: '',
     desc: '',
@@ -77,7 +73,6 @@ export default function AdminDashboard() {
     requiredDocs: 'आधार कार्ड, स्थानिक रहिवासी पुरावा'
   });
 
-  // 2. Drag & Drop GR File State
   const [grUploadData, setGrUploadData] = useState({
     grNumber: '',
     title: '',
@@ -90,7 +85,6 @@ export default function AdminDashboard() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  // 3. New Hero Slide Form State
   const [newSlide, setNewSlide] = useState({
     title: '',
     subtitle: '',
@@ -102,7 +96,6 @@ export default function AdminDashboard() {
     buttonLink: '/services'
   });
 
-  // 4. New Development Work State
   const [newWork, setNewWork] = useState({
     title: '',
     category: 'रस्ते व पायाभूत सुविधा',
@@ -116,7 +109,7 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (isAdmin === false) {
       navigate('/login');
       return;
     }
@@ -160,8 +153,6 @@ export default function AdminDashboard() {
     if (wRes.success) setWorks(wRes.works || []);
     if (gRes.success) setGrs(gRes.grs || []);
   };
-
-  // --- ACTIONS ---
 
   const handleUpdateAppStatus = async (id, status, customRemarks = null) => {
     let remarks = customRemarks;
@@ -432,10 +423,18 @@ export default function AdminDashboard() {
     }
   };
 
+  // 👇 डॅशबोर्ड डेटा लोड होईपर्यंत सुरक्षित राहण्यासाठी चेक
+  if (!stats) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center text-slate-500 font-bold">
+        प्रशासन डॅशबोर्ड लोड होत आहे...
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
       
-      {/* Admin Title Ribbon */}
       <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print border-b-4 border-orange-500">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-orange-400">
@@ -459,7 +458,6 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Global Alert Notification */}
       {alertNotice.text && (
         <div className={`p-4 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs animate-fade-in no-print ${
           alertNotice.type === 'error' ? 'bg-red-50 text-red-800 border border-red-300' : 'bg-emerald-50 text-emerald-800 border border-emerald-300'
@@ -469,52 +467,48 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Admin Summary Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 no-print">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span className="text-xs font-bold text-slate-400 block uppercase">दाखले अर्ज</span>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
-              {stats.totalApplications}
-            </div>
-            <div className="text-xs font-semibold text-amber-600 mt-1">
-              {stats.pendingApplications} प्रलंबित (Under Review)
-            </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <span className="text-xs font-bold text-slate-400 block uppercase">दाखले अर्ज</span>
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+            {stats.totalApplications}
           </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span className="text-xs font-bold text-slate-400 block uppercase">तक्रारी निवारण</span>
-            <div className="text-2xl sm:text-3xl font-black text-red-600 mt-1">
-              {stats.totalGrievances}
-            </div>
-            <div className="text-xs font-semibold text-emerald-700 mt-1">
-              {stats.resolvedGrievances} सोडवल्या ({stats.openGrievances} चालू)
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span className="text-xs font-bold text-slate-400 block uppercase">दाखला प्रकार (CMS)</span>
-            <div className="text-2xl sm:text-3xl font-black text-indigo-600 mt-1">
-              {certificateTypes.length}
-            </div>
-            <div className="text-xs font-semibold text-slate-500 mt-1">
-              नागरिकांसाठी थेट उपलब्ध
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-            <span className="text-xs font-bold text-slate-400 block uppercase">शासन निर्णय व जीआर</span>
-            <div className="text-2xl sm:text-3xl font-black text-amber-600 mt-1">
-              {stats.governmentGRsCount}
-            </div>
-            <div className="text-xs font-semibold text-slate-500 mt-1">
-              PDF व परिपत्रके संकलन
-            </div>
+          <div className="text-xs font-semibold text-amber-600 mt-1">
+            {stats.pendingApplications} प्रलंबित (Under Review)
           </div>
         </div>
-      )}
 
-      {/* Active Certificate Print View */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <span className="text-xs font-bold text-slate-400 block uppercase">तक्रारी निवारण</span>
+          <div className="text-2xl sm:text-3xl font-black text-red-600 mt-1">
+            {stats.totalGrievances}
+          </div>
+          <div className="text-xs font-semibold text-emerald-700 mt-1">
+            {stats.resolvedGrievances} सोडवल्या ({stats.openGrievances} चालू)
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <span className="text-xs font-bold text-slate-400 block uppercase">दाखला प्रकार (CMS)</span>
+          <div className="text-2xl sm:text-3xl font-black text-indigo-600 mt-1">
+            {certificateTypes.length}
+          </div>
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            नागरिकांसाठी थेट उपलब्ध
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <span className="text-xs font-bold text-slate-400 block uppercase">शासन निर्णय व जीआर</span>
+          <div className="text-2xl sm:text-3xl font-black text-amber-600 mt-1">
+            {stats.governmentGRsCount}
+          </div>
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            PDF व परिपत्रके संकलन
+          </div>
+        </div>
+      </div>
+
       {certToPrint && (
         <div className="bg-slate-50 p-6 rounded-3xl border-2 border-emerald-400 space-y-4">
           <div className="flex justify-between items-center border-b border-slate-200 pb-3 no-print">
@@ -536,7 +530,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Application Review & Document Verification Modal */}
       {selectedAppForReview && (
         <ApplicationReviewModal
           application={selectedAppForReview}
@@ -551,14 +544,11 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* Admin Section Tabs Navigation */}
       <div className="flex border-b border-slate-200 gap-2 overflow-x-auto no-print pb-1">
         <button
           onClick={() => setActiveTab('applications')}
           className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'applications'
-              ? 'bg-orange-600 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-100'
+            activeTab === 'applications' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'
           }`}
         >
           १. नागरी दाखले मंजुरी ({applications.length})
@@ -567,9 +557,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('grievances')}
           className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'grievances'
-              ? 'bg-orange-600 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-100'
+            activeTab === 'grievances' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'
           }`}
         >
           २. तक्रार निवारण ({grievances.length})
@@ -578,9 +566,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('certTypes')}
           className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'certTypes'
-              ? 'bg-orange-600 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-100'
+            activeTab === 'certTypes' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'
           }`}
         >
           ३. नवीन दाखला प्रकार जोडा (CMS)
@@ -589,9 +575,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('payment')}
           className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'payment'
-              ? 'bg-orange-600 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-100'
+            activeTab === 'payment' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'
           }`}
         >
           ४. बँक खाते व देयक सेटिंग्ज
@@ -600,9 +584,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('grUpload')}
           className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'grUpload'
-              ? 'bg-orange-600 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-100'
+            activeTab === 'grUpload' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'
           }`}
         >
           ५. शासन निर्णय PDF अपलोड
@@ -611,9 +593,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('villageCms')}
           className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'villageCms'
-              ? 'bg-orange-600 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-100'
+            activeTab === 'villageCms' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'
           }`}
         >
           ६. गाव सांख्यिकी व माहिती CMS
@@ -622,9 +602,7 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('slider')}
           className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'slider'
-              ? 'bg-orange-600 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-100'
+            activeTab === 'slider' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'
           }`}
         >
           ७. मुख्यपृष्ठ बॅनर व स्क्रोलिंग पट्टी
@@ -633,16 +611,13 @@ export default function AdminDashboard() {
         <button
           onClick={() => setActiveTab('works')}
           className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-            activeTab === 'works'
-              ? 'bg-orange-600 text-white shadow-xs'
-              : 'bg-white text-slate-700 hover:bg-slate-100'
+            activeTab === 'works' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100'
           }`}
         >
           ८. विकासकामे ({works.length})
         </button>
       </div>
 
-      {/* TAB 1: APPLICATIONS APPROVAL */}
       {activeTab === 'applications' && (
         <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 no-print">
           <div>
@@ -740,7 +715,6 @@ export default function AdminDashboard() {
         </section>
       )}
 
-      {/* TAB 2: GRIEVANCES */}
       {activeTab === 'grievances' && (
         <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 no-print">
           <div className="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -828,7 +802,6 @@ export default function AdminDashboard() {
         </section>
       )}
 
-      {/* Resolution Modal for Admin */}
       {selectedGrievanceForResolution && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-300">
@@ -906,7 +879,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TAB 3: DYNAMIC CERTIFICATE TYPES */}
       {activeTab === 'certTypes' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 no-print">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 lg:col-span-1">
@@ -1021,7 +993,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TAB 4: BANK & PAYMENT SETTINGS */}
       {activeTab === 'payment' && paymentSettings && (
         <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 no-print max-w-3xl mx-auto">
           <div className="border-b border-slate-100 pb-4">
@@ -1126,7 +1097,6 @@ export default function AdminDashboard() {
         </section>
       )}
 
-      {/* TAB 5: GR PDF UPLOAD */}
       {activeTab === 'grUpload' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 no-print">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 lg:col-span-1">
@@ -1268,7 +1238,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TAB 6: VILLAGE CMS */}
       {activeTab === 'villageCms' && villageProfile && (
         <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 no-print max-w-4xl mx-auto">
           <div className="border-b border-slate-100 pb-4">
@@ -1291,7 +1260,7 @@ export default function AdminDashboard() {
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">एकूण लोकसंख्या:</label>
                   <input
                     type="text"
-                    value={villageProfile.statistics.population}
+                    value={villageProfile.statistics?.population || ''}
                     onChange={(e) => setVillageProfile({
                       ...villageProfile,
                       statistics: { ...villageProfile.statistics, population: e.target.value }
@@ -1304,7 +1273,7 @@ export default function AdminDashboard() {
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">एकूण कुटुंबे:</label>
                   <input
                     type="text"
-                    value={villageProfile.statistics.totalHouseholds}
+                    value={villageProfile.statistics?.totalHouseholds || ''}
                     onChange={(e) => setVillageProfile({
                       ...villageProfile,
                       statistics: { ...villageProfile.statistics, totalHouseholds: e.target.value }
@@ -1317,7 +1286,7 @@ export default function AdminDashboard() {
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">साक्षरता दर:</label>
                   <input
                     type="text"
-                    value={villageProfile.statistics.literacyRate}
+                    value={villageProfile.statistics?.literacyRate || ''}
                     onChange={(e) => setVillageProfile({
                       ...villageProfile,
                       statistics: { ...villageProfile.statistics, literacyRate: e.target.value }
@@ -1330,7 +1299,7 @@ export default function AdminDashboard() {
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">प्रभाग / वॉर्ड संख्या:</label>
                   <input
                     type="text"
-                    value={villageProfile.statistics.wardCount}
+                    value={villageProfile.statistics?.wardCount || ''}
                     onChange={(e) => setVillageProfile({
                       ...villageProfile,
                       statistics: { ...villageProfile.statistics, wardCount: e.target.value }
@@ -1399,7 +1368,6 @@ export default function AdminDashboard() {
         </section>
       )}
 
-      {/* TAB 7: SLIDER & TICKER */}
       {activeTab === 'slider' && (
         <div className="space-y-8 no-print">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-4">
@@ -1526,7 +1494,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* TAB 8: WORKS */}
       {activeTab === 'works' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 no-print">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 lg:col-span-1">

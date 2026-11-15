@@ -11,6 +11,15 @@ export default function About() {
     });
   }, []);
 
+  // 👇 डेटा येईपर्यंत क्रॅश न होण्यासाठी सेफ्टी चेक
+  if (!profile) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center text-slate-500 font-bold">
+        गावांची माहिती लोड होत आहे...
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
       
@@ -29,7 +38,7 @@ export default function About() {
         </div>
       </div>
 
-      {/* Dynamic Informational Sections (Editable via Admin CMS) */}
+      {/* Dynamic Informational Sections */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-3">
@@ -64,8 +73,8 @@ export default function About() {
 
       </div>
 
-      {/* Dynamic Key Stats Table (Admin CMS Controlled) */}
-      {profile && (
+      {/* Dynamic Key Stats Table */}
+      {profile.statistics && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-4">
           <div className="flex justify-between items-center border-b border-slate-100 pb-3">
             <h3 className="text-lg font-bold text-slate-900">
@@ -98,29 +107,27 @@ export default function About() {
       )}
 
       {/* Leadership & Office Hours */}
-      {profile && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-3">
-            <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-orange-600" />
-              <span>कार्यालयीन वेळ व संपर्क</span>
-            </h4>
-            <p className="text-slate-600">वेळ: <strong className="text-slate-900">{profile.officeHours}</strong></p>
-            <p className="text-slate-600">अधिकृत ई-मेल: <strong className="text-slate-900">{profile.email}</strong></p>
-            <p className="text-slate-600">हेल्पलाइन: <strong className="text-slate-900">{profile.helpline}</strong></p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-3">
-            <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-              <Building className="w-4 h-4 text-emerald-600" />
-              <span>स्थानिक स्वराज्य संस्था रचना</span>
-            </h4>
-            <p className="text-slate-600">सरपंच: <strong className="text-slate-900">{profile.sarpanch.name}</strong> ({profile.sarpanch.phone})</p>
-            <p className="text-slate-600">उपसरपंच: <strong className="text-slate-900">{profile.upsarpanch.name}</strong> ({profile.upsarpanch.phone})</p>
-            <p className="text-slate-600">ग्रामसेवक: <strong className="text-slate-900">{profile.gramsevak.name}</strong> ({profile.gramsevak.phone})</p>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-3">
+          <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-orange-600" />
+            <span>कार्यालयीन वेळ व संपर्क</span>
+          </h4>
+          <p className="text-slate-600">वेळ: <strong className="text-slate-900">{profile.officeHours}</strong></p>
+          <p className="text-slate-600">अधिकृत ई-मेल: <strong className="text-slate-900">{profile.email}</strong></p>
+          <p className="text-slate-600">हेल्पलाइन: <strong className="text-slate-900">{profile.helpline}</strong></p>
         </div>
-      )}
+
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-3">
+          <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+            <Building className="w-4 h-4 text-emerald-600" />
+            <span>स्थानिक स्वराज्य संस्था रचना</span>
+          </h4>
+          <p className="text-slate-600">सरपंच: <strong className="text-slate-900">{profile.sarpanch?.name}</strong> ({profile.sarpanch?.phone})</p>
+          <p className="text-slate-600">उपसरपंच: <strong className="text-slate-900">{profile.upsarpanch?.name}</strong> ({profile.upsarpanch?.phone})</p>
+          <p className="text-slate-600">ग्रामसेवक: <strong className="text-slate-900">{profile.gramsevak?.name}</strong> ({profile.gramsevak?.phone})</p>
+        </div>
+      </div>
 
     </div>
   );

@@ -5,7 +5,8 @@ import { apiRequest } from '../utils/api';
 import { Lock, Mail, RefreshCw, ShieldCheck, AlertCircle, KeyRound, CheckCircle } from 'lucide-react';
 
 export default function Login() {
-  const { login, user } = useAuth();
+  // 👇 येथे '|| {}' सेफ्टी चेक जोडला आहे
+  const { login, user } = useAuth() || {};
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -16,7 +17,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Fetch captcha on component load
   const loadCaptcha = async () => {
     const res = await apiRequest('/auth/captcha');
     if (res.success) {
@@ -30,7 +30,6 @@ export default function Login() {
 
   useEffect(() => {
     loadCaptcha();
-    // Redirect if already logged in
     if (user) {
       if (user.role === 'admin') navigate('/admin');
       else navigate('/dashboard');
@@ -65,11 +64,10 @@ export default function Login() {
     setLoading(false);
 
     if (res.success && res.token && res.user) {
-      // 📌 हे टोकन आणि युजर ब्राउझरमध्ये सेव्ह करणे अत्यंत आवश्यक आहे!
       localStorage.setItem('token', res.token);
       localStorage.setItem('user', JSON.stringify(res.user));
 
-      login(res.user, res.token);
+      if (login) login(res.user, res.token);
 
       if (res.user.role === 'admin') {
         navigate('/admin');
@@ -82,13 +80,10 @@ export default function Login() {
     }
   };
 
-  
-
   return (
     <div className="max-w-md mx-auto px-4 py-12">
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xl space-y-6">
         
-        {/* Header */}
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center mx-auto shadow-md">
             <Lock className="w-7 h-7" />
@@ -101,8 +96,6 @@ export default function Login() {
           </p>
         </div>
 
-       
-
         {errorMsg && (
           <div className="bg-red-50 border border-red-300 text-red-700 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -111,8 +104,6 @@ export default function Login() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          
-          {/* Email */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
               ईमेल आयडी (Email ID) *
@@ -130,7 +121,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
               पासवर्ड (Password) *
@@ -148,14 +138,12 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Dynamic Captcha Verification Box */}
           <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-2">
             <label className="block text-xs font-bold text-slate-700">
               सुरक्षा कॅप्चा पडताळणी (Security Captcha) *
             </label>
 
             <div className="flex items-center gap-3">
-              {/* Captcha Image */}
               <div className="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs">
                 {captchaData.captchaSvg ? (
                   <img src={captchaData.captchaSvg} alt="Captcha" className="h-10 w-36 object-contain" />
@@ -166,7 +154,6 @@ export default function Login() {
                 )}
               </div>
 
-              {/* Refresh Captcha Button */}
               <button
                 type="button"
                 onClick={loadCaptcha}
