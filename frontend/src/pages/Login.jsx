@@ -82,11 +82,7 @@ export default function Login() {
     }
   };
 
-  // // Quick fill default admin credentials helper for easy testing
-  // const fillAdmin = () => {
-  //   setEmail('admin@grampanchayat.gov.in');
-  //   setPassword('Admin@123');
-  // };
+  
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
@@ -105,20 +101,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Default Admin Pill for Quick Verification */}
-        {/* <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs flex justify-between items-center text-amber-900">
-          <div>
-            <span className="font-bold block">प्रशासक लॉगिन (Default Admin):</span>
-            <span className="font-mono text-[11px] text-slate-600">admin@grampanchayat.gov.in / Admin@123</span>
-          </div>
-          <button
-            type="button"
-            onClick={fillAdmin}
-            className="text-[11px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-2.5 py-1.5 rounded-lg shrink-0 cursor-pointer"
-          >
-            भरा (Fill)
-          </button>
-        </div> */}
+       
 
         {errorMsg && (
           <div className="bg-red-50 border border-red-300 text-red-700 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2">
