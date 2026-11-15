@@ -5,7 +5,8 @@ import { AlertCircle, CheckCircle2, Clock, Send, ShieldAlert, MessageSquarePlus,
 import { Link } from 'react-router-dom';
 
 export default function Grievances() {
-  const { user } = useAuth();
+  // 👇 येथे '|| {}' सेफ्टी चेक लावला आहे
+  const { user } = useAuth() || {};
   const [categories] = useState([
     'पिण्याचे पाणी पुरवठा',
     'पथदिवे व विद्युत समस्या (Street Lights)',
@@ -31,8 +32,10 @@ export default function Grievances() {
   const fetchMyGrievances = async () => {
     if (!user) return;
     const res = await apiRequest('/grievances/my');
-    if (res.success && res.grievances) {
+    if (res && res.success && res.grievances) {
       setMyGrievances(res.grievances);
+    } else {
+      setMyGrievances([]);
     }
   };
 
@@ -63,8 +66,8 @@ export default function Grievances() {
 
     setLoading(false);
 
-    if (res.success && res.grievance) {
-      setSuccessMsg(`आपली तक्रार यशस्वीरित्या नोंदवली गेली आहे! ट्रॅकिंग क्रमांक: ${res.grievance.trackingId}`);
+    if (res && res.success && res.grievance) {
+      setSuccessMsg(`आपली तक्रार यशस्वीरित्या नोंदवली गेली आहे! ट्रॅकिंग क्रमांक: ${res.grievance.trackingId || 'N/A'}`);
       setFormData({
         category: categories[0],
         title: '',
@@ -73,7 +76,7 @@ export default function Grievances() {
       });
       fetchMyGrievances();
     } else {
-      setErrorMsg(res.message || 'त्रुटी उद्भवली.');
+      setErrorMsg(res?.message || 'त्रुटी उद्भवली.');
     }
   };
 
@@ -219,28 +222,28 @@ export default function Grievances() {
           ) : (
             <div className="space-y-4 max-h-[520px] overflow-y-auto pr-1">
               {myGrievances.map((g) => (
-                <div key={g.id} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-2">
+                <div key={g?.id || Math.random()} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-mono font-bold text-slate-600">{g.trackingId}</span>
+                    <span className="font-mono font-bold text-slate-600">{g?.trackingId || 'N/A'}</span>
                     <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
-                      g.status === 'resolved' 
+                      g?.status === 'resolved' 
                         ? 'bg-emerald-100 text-emerald-800' 
-                        : g.status === 'in_progress' 
+                        : g?.status === 'in_progress' 
                           ? 'bg-blue-100 text-blue-800' 
                           : 'bg-amber-100 text-amber-800'
                     }`}>
-                      {g.status === 'resolved' ? 'निवारण झाले' : g.status === 'in_progress' ? 'काम चालू' : 'प्रलंबित'}
+                      {g?.status === 'resolved' ? 'निवारण झाले' : g?.status === 'in_progress' ? 'काम चालू' : 'प्रलंबित'}
                     </span>
                   </div>
 
-                  <h4 className="font-bold text-slate-900 text-sm">{g.title}</h4>
-                  <p className="text-xs text-slate-600">{g.description}</p>
+                  <h4 className="font-bold text-slate-900 text-sm">{g?.title || 'तक्रार विषय'}</h4>
+                  <p className="text-xs text-slate-600">{g?.description || ''}</p>
                   
                   <div className="text-[11px] text-slate-500">
-                    स्थान: <span className="font-medium text-slate-700">{g.location}</span>
+                    स्थान: <span className="font-medium text-slate-700">{g?.location || '-'}</span>
                   </div>
 
-                  {g.resolution && (
+                  {g?.resolution && (
                     <div className="mt-2 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-xs text-emerald-900">
                       <strong>प्रशासकीय निवारण:</strong> {g.resolution}
                     </div>

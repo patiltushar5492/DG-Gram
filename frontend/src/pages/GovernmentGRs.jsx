@@ -42,8 +42,10 @@ export default function GovernmentGRs() {
       query += `&search=${encodeURIComponent(search.trim())}`;
     }
     const res = await apiRequest(`/government-grs${query}`);
-    if (res.success && res.grs) {
+    if (res && res.success && res.grs) {
       setGrs(res.grs);
+    } else {
+      setGrs([]);
     }
     setLoading(false);
   };
@@ -59,7 +61,9 @@ export default function GovernmentGRs() {
 
   // Open direct printable official document in new window
   const handleOpenGR = (gr) => {
-    window.open(`/api/government-grs/${gr.id}/download`, '_blank');
+    if (gr && gr.id) {
+      window.open(`/api/government-grs/${gr.id}/download`, '_blank');
+    }
   };
 
   // Trigger modal preview
@@ -145,11 +149,11 @@ export default function GovernmentGRs() {
 
       {/* GRs Listing Table / Grid */}
       {loading ? (
-        <div className="text-center py-12 text-slate-500">
+        <div className="text-center py-12 text-slate-500 font-bold">
           शासन निर्णय लोड होत आहेत, कृपया प्रतीक्षा करा...
         </div>
       ) : grs.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 text-slate-500">
+        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 text-slate-500 text-xs">
           कोणताही शासन निर्णय सापडला नाही. कृपया शोध शब्द बदलून पहा.
         </div>
       ) : (
@@ -161,40 +165,40 @@ export default function GovernmentGRs() {
           <div className="grid grid-cols-1 gap-4">
             {grs.map((gr) => (
               <div
-                key={gr.id}
+                key={gr?.id || Math.random()}
                 className="bg-white border-2 border-slate-200/80 hover:border-amber-400 rounded-2xl p-5 sm:p-6 transition-all shadow-xs hover:shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-5"
               >
                 <div className="space-y-2 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="bg-amber-100 text-amber-900 border border-amber-300 font-mono font-bold text-xs px-2.5 py-0.5 rounded-md">
-                      जीआर क्र: {gr.grNumber}
+                      जीआर क्र: {gr?.grNumber || 'N/A'}
                     </span>
                     <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-md">
-                      {gr.category}
+                      {gr?.category || 'सामान्य'}
                     </span>
                     <span className="text-xs text-slate-500 flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      {gr.date}
+                      {gr?.date || '-'}
                     </span>
                   </div>
 
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
-                    {gr.title}
+                    {gr?.title || 'शासन निर्णय'}
                   </h3>
 
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    {gr.summary}
+                    {gr?.summary || ''}
                   </p>
 
                   <div className="text-xs font-medium text-slate-500 flex items-center gap-1.5 pt-1">
                     <Building2 className="w-4 h-4 text-amber-700" />
-                    <span>विभाग: {gr.department}</span>
+                    <span>विभाग: {gr?.department || 'महाराष्ट्र शासन'}</span>
                   </div>
                 </div>
 
                 <div className="flex flex-row md:flex-col items-center md:items-end gap-3 w-full md:w-auto shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
                   <span className="text-xs text-slate-400 font-mono hidden md:inline">
-                    PDF आकार: {gr.fileSize}
+                    PDF आकार: {gr?.fileSize || '2 MB'}
                   </span>
 
                   <div className="flex gap-2 w-full md:w-auto">
@@ -240,7 +244,7 @@ export default function GovernmentGRs() {
               </div>
               <button
                 onClick={() => setActivePreviewGR(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg"
+                className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -249,25 +253,25 @@ export default function GovernmentGRs() {
             <div className="p-6 sm:p-8 space-y-4 overflow-y-auto font-serif">
               <div className="text-center border-b-2 border-slate-900 pb-3">
                 <div className="text-xs font-bold text-slate-600 uppercase">महाराष्ट्र शासन (Government of Maharashtra)</div>
-                <div className="text-sm font-semibold text-slate-700">{activePreviewGR.department}</div>
+                <div className="text-sm font-semibold text-slate-700">{activePreviewGR?.department || ''}</div>
                 <div className="text-lg font-black text-slate-950 mt-1">अधिकृत शासन निर्णय / परिपत्रक</div>
                 <div className="font-mono font-bold text-amber-800 text-xs mt-0.5">
-                  क्रमांक: {activePreviewGR.grNumber}
+                  क्रमांक: {activePreviewGR?.grNumber || ''}
                 </div>
               </div>
 
               <div className="flex justify-between items-center text-xs font-sans text-slate-500 border-b border-slate-200 pb-2">
-                <div>वर्गवारी: <strong>{activePreviewGR.category}</strong></div>
-                <div>दिनांक: <strong>{activePreviewGR.date}</strong></div>
+                <div>वर्गवारी: <strong>{activePreviewGR?.category || ''}</strong></div>
+                <div>दिनांक: <strong>{activePreviewGR?.date || ''}</strong></div>
               </div>
 
               <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs sm:text-sm font-bold text-amber-950 font-sans leading-relaxed">
-                विषय: {activePreviewGR.title}
+                विषय: {activePreviewGR?.title || ''}
               </div>
 
               <div className="text-xs sm:text-sm text-slate-800 leading-relaxed space-y-2">
                 <p className="font-bold text-slate-900">प्रस्तावना व शासन आदेश सारांश:</p>
-                <p className="text-justify font-sans">{activePreviewGR.summary}</p>
+                <p className="text-justify font-sans">{activePreviewGR?.summary || ''}</p>
                 <p className="text-justify font-sans text-slate-600 pt-2">
                   सदर आदेश ग्रामपंचायत गाळण बुद्रुक, ता. पाचोरा, जि. जळगाव कार्यक्षेत्रातील अंमलबजावणीसाठी सार्वजनिक संकेतस्थळावर प्रसिद्ध करण्यात आलेला आहे.
                 </p>

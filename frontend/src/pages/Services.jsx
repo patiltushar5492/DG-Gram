@@ -27,7 +27,8 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Services() {
-  const { user } = useAuth();
+  // 👇 येथे '|| {}' सेफ्टी चेक लावला आहे
+  const { user } = useAuth() || {};
   const navigate = useNavigate();
 
   // Dynamic certificate types fetched from Backend / Admin CMS
@@ -38,16 +39,29 @@ export default function Services() {
 
   // Application Details
   const [formData, setFormData] = useState({
-    applicantName: user ? user.name : '',
+    applicantName: '',
     fatherOrHusbandName: '',
-    mobile: user ? user.mobile : '',
-    email: user ? user.email : '',
+    mobile: '',
+    email: '',
     aadhaarNumber: '',
     purpose: '',
-    address: user && user.address ? user.address : 'गाळण बुद्रुक, ता. पाचोरा, जि. जळगाव',
+    address: 'गाळण बुद्रुक, ता. पाचोरा, जि. जळगाव',
     residingSinceYears: 20,
     documentsNote: 'सर्व आवश्यक कागदपत्रांची प्रत सोबत जोडलेली आहे.'
   });
+
+  // जेव्हा user डेटा सर्व्हरकडून येईल, तेव्हा फॉर्म अपडेट होईल
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        applicantName: prev.applicantName || user.name || '',
+        mobile: prev.mobile || user.mobile || '',
+        email: prev.email || user.email || '',
+        address: prev.address || user.address || 'गाळण बुद्रुक, ता. पाचोरा, जि. जळगाव'
+      }));
+    }
+  }, [user]);
 
   // Mandatory Document Upload States
   const [aadhaarFile, setAadhaarFile] = useState(null);
@@ -67,13 +81,16 @@ export default function Services() {
       apiRequest('/certificate-types'),
       apiRequest('/payment-settings')
     ]).then(([certRes, payRes]) => {
-      if (certRes.success && certRes.certificateTypes && certRes.certificateTypes.length > 0) {
+      if (certRes && certRes.success && certRes.certificateTypes && certRes.certificateTypes.length > 0) {
         setServiceCatalog(certRes.certificateTypes);
         setSelectedService(certRes.certificateTypes[0]);
       }
-      if (payRes.success) {
+      if (payRes && payRes.success) {
         setPaymentSettings(payRes.paymentSettings);
       }
+      setLoading(false);
+    }).catch(err => {
+      console.error(err);
       setLoading(false);
     });
   }, []);
@@ -125,9 +142,7 @@ export default function Services() {
     setErrorMsg('');
 
     try {
-      // Send application as multipart/form-data so actual files travel alongside form fields
-      // in a single request. Backend multer will save them and store real paths.
-      const token = localStorage.getItem('dg_gram_token');
+      const token = localStorage.getItem('dg_gram_token') || localStorage.getItem('token');
       const fd = new FormData();
 
       // Text fields
@@ -136,8 +151,8 @@ export default function Services() {
       fd.append('mobile', formData.mobile || '');
       fd.append('email', formData.email || '');
       fd.append('aadhaarNumber', formData.aadhaarNumber || '');
-      fd.append('serviceType', selectedService.id);
-      fd.append('serviceNameMr', selectedService.nameMr);
+      fd.append('serviceType', selectedService?.id || '');
+      fd.append('serviceNameMr', selectedService?.nameMr || '');
       fd.append('purpose', formData.purpose || '');
       fd.append('address', formData.address || '');
       fd.append('residingSinceYears', String(formData.residingSinceYears || 20));
@@ -149,31 +164,31 @@ export default function Services() {
       // Payment details as a JSON string field
       fd.append('paymentDetailsJson', JSON.stringify(paymentDetails));
 
-      // Actual files  — multer picks these by field name
+      // Actual files
       if (aadhaarFile)        fd.append('aadhaarFile',        aadhaarFile);
       if (residenceProofFile) fd.append('residenceProofFile', residenceProofFile);
       if (optionalDocFile)    fd.append('optionalDocFile',    optionalDocFile);
 
-      const rawRes = await fetch('/api/applications/apply', {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dg-gram.onrender.com';
+      const rawRes = await fetch(`${API_BASE_URL}/api/applications/apply`, {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        // Do NOT set Content-Type — let the browser set it with boundary for multipart
         body: fd
       });
       const res = await rawRes.json();
 
       setSubmitting(false);
 
-      if (res.success && res.receipt) {
+      if (res && res.success && res.receipt) {
         setSuccessReceipt(res.receipt);
         setFormData({
-          applicantName: user.name,
+          applicantName: user?.name || '',
           fatherOrHusbandName: '',
-          mobile: user.mobile,
-          email: user.email,
+          mobile: user?.mobile || '',
+          email: user?.email || '',
           aadhaarNumber: '',
           purpose: '',
-          address: user.address || 'गाळण बुद्रुक, ता. पाचोरा',
+          address: user?.address || 'गाळण बुद्रुक, ता. पाचोरा',
           residingSinceYears: 20,
           documentsNote: 'कागदपत्रे तपासणीसाठी तयार आहेत.'
         });
@@ -181,7 +196,7 @@ export default function Services() {
         setResidenceProofFile(null);
         setOptionalDocFile(null);
       } else {
-        setErrorMsg(res.message || 'अर्जात त्रुटी आढळली. कृपया पुन्हा प्रयत्न करा.');
+        setErrorMsg(res?.message || 'अर्जात त्रुटी आढळली. कृपया पुन्हा प्रयत्न करा.');
       }
     } catch (err) {
       setSubmitting(false);
@@ -226,13 +241,17 @@ export default function Services() {
 
         {loading ? (
           <div className="py-8 text-center text-xs text-slate-400">दाखले यादी लोड होत आहे...</div>
+        ) : serviceCatalog.length === 0 ? (
+          <div className="py-8 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-white">
+            सध्या कोणतेही दाखले उपलब्ध नाहीत.
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {serviceCatalog.map((s) => {
-              const isSelected = selectedService?.id === s.id;
+              const isSelected = selectedService?.id === s?.id;
               return (
                 <div
-                  key={s.id}
+                  key={s?.id || Math.random()}
                   onClick={() => handleServiceSelect(s)}
                   className={`p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
                     isSelected 
@@ -244,23 +263,23 @@ export default function Services() {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md flex items-center gap-1">
                         <Clock className="w-3 h-3 text-orange-600" />
-                        {s.deliveryDays}
+                        {s?.deliveryDays || '२-३ दिवस'}
                       </span>
                       <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                        शुल्क: {s.fee}
+                        शुल्क: {s?.fee || '₹ २०'}
                       </span>
                     </div>
 
                     <h3 className={`font-bold text-base leading-snug ${isSelected ? 'text-orange-700' : 'text-slate-900'}`}>
-                      {s.nameMr}
+                      {s?.nameMr || 'दाखला सेवा'}
                     </h3>
                     <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                      {s.desc}
+                      {s?.desc || ''}
                     </p>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-200/60 text-[11px] text-slate-500">
-                    <span className="font-semibold text-slate-700">आवश्यक कागदपत्रे:</span> {s.requiredDocs}
+                    <span className="font-semibold text-slate-700">आवश्यक कागदपत्रे:</span> {s?.requiredDocs || 'आधार कार्ड'}
                   </div>
                 </div>
               );
@@ -278,12 +297,12 @@ export default function Services() {
                 २. ऑनलाइन अर्ज व कागदपत्रे अपलोड
               </span>
               <h3 className="text-xl font-bold text-slate-900 mt-1">
-                {selectedService.nameMr} साठी अर्ज
+                {selectedService?.nameMr || 'दाखला'} साठी अर्ज
               </h3>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg font-bold">
-                शासकीय शुल्क: {selectedService.fee}
+                शासकीय शुल्क: {selectedService?.fee || '₹ २०'}
               </span>
             </div>
           </div>
@@ -324,7 +343,7 @@ export default function Services() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  वडिलांचे किंवा पतीचे नाव (Father / Husband Name)
+                  वडीलांचे किंवा पतीचे नाव (Father / Husband Name)
                 </label>
                 <input
                   type="text"
@@ -465,7 +484,7 @@ export default function Services() {
                   )}
                 </div>
 
-                {/* 3. Optional Supporting Doc (Birth/Death card, hospital slip, etc.) */}
+                {/* 3. Optional Supporting Doc */}
                 <div className="bg-white p-4 rounded-xl border border-amber-200 space-y-2 md:col-span-2">
                   <label className="block text-xs font-bold text-slate-800">
                     ३. इतर संबंधित कागदपत्र (हॉस्पिटल डिस्चार्ज स्लिप / वारस पुरावा / लग्नपत्रिका - ऐच्छिक)

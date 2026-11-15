@@ -8,9 +8,12 @@ export default function Development() {
 
   useEffect(() => {
     apiRequest('/development-works').then(res => {
-      if (res.success && res.works) {
+      if (res && res.success && res.works) {
         setWorks(res.works);
       }
+      setLoading(false);
+    }).catch(err => {
+      console.error(err);
       setLoading(false);
     });
   }, []);
@@ -34,49 +37,53 @@ export default function Development() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-slate-500">
+        <div className="text-center py-12 text-slate-500 font-bold">
           माहिती लोड होत आहे...
+        </div>
+      ) : works.length === 0 ? (
+        <div className="text-center py-12 text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-white">
+          सध्या कोणतीही विकासकामे नोंदवलेली नाहीत.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {works.map((work) => (
             <div
-              key={work.id}
+              key={work?.id || Math.random()}
               className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-5"
             >
               <div>
                 <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
                   <span className="text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-md">
-                    {work.fundingSource}
+                    {work?.fundingSource || 'विकास निधी'}
                   </span>
                   <span className={`text-xs font-bold px-2.5 py-0.5 rounded-md ${
-                    work.progress === 100 
+                    (work?.progress ?? 0) === 100 
                       ? 'bg-blue-100 text-blue-800' 
                       : 'bg-amber-100 text-amber-800'
                   }`}>
-                    {work.status}
+                    {work?.status || 'चालू काम'}
                   </span>
                 </div>
 
                 <h3 className="text-lg font-bold text-slate-900 leading-snug">
-                  {work.title}
+                  {work?.title || 'विकासकाम'}
                 </h3>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <div>
                     <span className="text-slate-500 block">अंदाजपत्रकीय निधी:</span>
-                    <span className="font-extrabold text-slate-900 text-sm">{work.budget}</span>
+                    <span className="font-extrabold text-slate-900 text-sm">{work?.budget || '₹०'}</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block">खर्च झालेला निधी:</span>
-                    <span className="font-extrabold text-emerald-700 text-sm">{work.spent}</span>
+                    <span className="font-extrabold text-emerald-700 text-sm">{work?.spent || '₹०'}</span>
                   </div>
                   <div className="col-span-2 flex items-center gap-1.5 text-slate-600 pt-1 border-t border-slate-200/60">
                     <MapPin className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-                    <span>स्थान: <strong>{work.location}</strong></span>
+                    <span>स्थान: <strong>{work?.location || 'गाळण बुद्रुक'}</strong></span>
                   </div>
                   <div className="col-span-2 text-slate-500 text-[11px]">
-                    मजूर / कंत्राटदार: <strong>{work.contractor}</strong>
+                    मजूर / कंत्राटदार: <strong>{work?.contractor || 'स्थानिक यंत्रणा'}</strong>
                   </div>
                 </div>
               </div>
@@ -85,14 +92,14 @@ export default function Development() {
               <div>
                 <div className="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
                   <span>कामाची प्रत्यक्ष प्रगती</span>
-                  <span className="text-emerald-700">{work.progress}% पूर्ण</span>
+                  <span className="text-emerald-700">{work?.progress ?? 0}% पूर्ण</span>
                 </div>
                 <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      work.progress === 100 ? 'bg-blue-600' : 'bg-emerald-500'
+                      (work?.progress ?? 0) === 100 ? 'bg-blue-600' : 'bg-emerald-500'
                     }`}
-                    style={{ width: `${work.progress}%` }}
+                    style={{ width: `${work?.progress ?? 0}%` }}
                   ></div>
                 </div>
               </div>

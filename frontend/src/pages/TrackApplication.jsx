@@ -38,10 +38,10 @@ export default function TrackApplication() {
     const res = await apiRequest(`/track/any/${encodeURIComponent(term)}`);
     setLoading(false);
 
-    if (res.success && res.data) {
+    if (res && res.success && res.data) {
       setSearchResult(res);
     } else {
-      setErrorMsg(res.message || 'दिलेल्या ट्रॅकिंग आयडीनुसार कोणतीही नोंद आढळली नाही. कृपया अचूक क्रमांक प्रविष्ट करा.');
+      setErrorMsg(res?.message || 'दिलेल्या ट्रॅकिंग आयडीनुसार कोणतीही नोंद आढळली नाही. कृपया अचूक क्रमांक प्रविष्ट करा.');
     }
   };
 
@@ -132,28 +132,28 @@ export default function TrackApplication() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
               <div>
                 <span className="text-xs font-bold text-orange-600 font-mono">
-                  दाखला ट्रॅकिंग आयडी: {searchResult.data.trackingId}
+                  दाखला ट्रॅकिंग आयडी: {searchResult?.data?.trackingId || ''}
                 </span>
                 <h3 className="text-lg font-bold text-slate-900 mt-0.5">
-                  {searchResult.data.serviceNameMr}
+                  {searchResult?.data?.serviceNameMr || ''}
                 </h3>
               </div>
 
               {/* Status Badge */}
               <div>
-                {searchResult.data.status === 'approved' && (
+                {searchResult?.data?.status === 'approved' && (
                   <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1.5 rounded-full border border-emerald-300">
                     <CheckCircle className="w-4 h-4 text-emerald-600" />
                     मंजूर (Approved & Ready)
                   </span>
                 )}
-                {searchResult.data.status === 'pending' && (
+                {searchResult?.data?.status === 'pending' && (
                   <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1.5 rounded-full border border-amber-300">
                     <Clock className="w-4 h-4 text-amber-600 animate-spin" />
                     पडताळणी चालू (Under Review)
                   </span>
                 )}
-                {searchResult.data.status === 'rejected' && (
+                {searchResult?.data?.status === 'rejected' && (
                   <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-800 font-bold text-xs px-3 py-1.5 rounded-full border border-red-300">
                     <XCircle className="w-4 h-4 text-red-600" />
                     नामंजूर (Rejected)
@@ -165,27 +165,27 @@ export default function TrackApplication() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <span className="text-slate-500 block">अर्जदाराचे नाव:</span>
-                <span className="font-bold text-slate-900">{searchResult.data.applicantName}</span>
+                <span className="font-bold text-slate-900">{searchResult?.data?.applicantName || ''}</span>
               </div>
               <div>
                 <span className="text-slate-500 block">अर्जाची तारीख:</span>
                 <span className="font-semibold text-slate-800">
-                  {new Date(searchResult.data.appliedAt).toLocaleString('mr-IN')}
+                  {searchResult?.data?.appliedAt ? new Date(searchResult.data.appliedAt).toLocaleString('mr-IN') : ''}
                 </span>
               </div>
               <div>
                 <span className="text-slate-500 block">दाखला कारण:</span>
-                <span className="font-semibold text-slate-800">{searchResult.data.purpose}</span>
+                <span className="font-semibold text-slate-800">{searchResult?.data?.purpose || ''}</span>
               </div>
               <div>
                 <span className="text-slate-500 block">अधिकारी शेरा (Remarks):</span>
-                <span className="font-semibold text-slate-800">{searchResult.data.remarks || 'कागदपत्रे छाननी सुरू आहे.'}</span>
+                <span className="font-semibold text-slate-800">{searchResult?.data?.remarks || 'कागदपत्रे छाननी सुरू आहे.'}</span>
               </div>
             </div>
           </div>
 
           {/* If Approved: Show the official printable certificate component */}
-          {searchResult.data.status === 'approved' && (
+          {searchResult?.data?.status === 'approved' && (
             <div className="pt-2">
               <div className="text-center font-bold text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 py-2.5 rounded-xl mb-4 max-w-4xl mx-auto no-print">
                 ✨ अभिनंदन! आपला दाखला ग्रामपंचायतीने डिजिटल स्वाक्षरीसह मंजूर केला आहे. खालील दाखला थेट प्रिंट करा.
@@ -203,37 +203,37 @@ export default function TrackApplication() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="bg-red-100 text-red-800 border border-red-200 font-mono font-bold text-xs px-2.5 py-0.5 rounded-md">
-                  तक्रार ट्रॅकिंग: {searchResult.data.trackingId}
+                  तक्रार ट्रॅकिंग: {searchResult?.data?.trackingId || ''}
                 </span>
                 <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-0.5 rounded-md">
-                  {searchResult.data.category}
+                  {searchResult?.data?.category || ''}
                 </span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 mt-2">
-                {searchResult.data.title}
+                {searchResult?.data?.title || ''}
               </h3>
             </div>
 
             <div>
-              {searchResult.data.status === 'resolved' && (
+              {searchResult?.data?.status === 'resolved' && (
                 <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1.5 rounded-full border border-emerald-300">
                   <CheckCircle className="w-4 h-4 text-emerald-600" />
                   निवारण झाले (Resolved)
                 </span>
               )}
-              {searchResult.data.status === 'in_progress' && (
+              {searchResult?.data?.status === 'in_progress' && (
                 <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 font-bold text-xs px-3 py-1.5 rounded-full border border-blue-300">
                   <Clock className="w-4 h-4 text-blue-600 animate-spin" />
                   काम चालू आहे (In Progress)
                 </span>
               )}
-              {(searchResult.data.status === 'open' || searchResult.data.status === 'pending') && (
+              {(searchResult?.data?.status === 'open' || searchResult?.data?.status === 'pending') && (
                 <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1.5 rounded-full border border-amber-300">
                   <Clock className="w-4 h-4 text-amber-600" />
                   नोंद झाली / प्रलंबित (Pending)
                 </span>
               )}
-              {searchResult.data.status === 'rejected' && (
+              {searchResult?.data?.status === 'rejected' && (
                 <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-800 font-bold text-xs px-3 py-1.5 rounded-full border border-red-300">
                   <XCircle className="w-4 h-4 text-red-600" />
                   नाकारण्यात आली (Rejected)
@@ -246,31 +246,31 @@ export default function TrackApplication() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
             <div>
               <span className="text-slate-500 block">तक्रारदार:</span>
-              <span className="font-bold text-slate-900">{searchResult.data.citizenName}</span>
+              <span className="font-bold text-slate-900">{searchResult?.data?.citizenName || ''}</span>
             </div>
             <div>
               <span className="text-slate-500 block">नोंदणी तारीख:</span>
               <span className="font-semibold text-slate-900">
-                {new Date(searchResult.data.createdAt).toLocaleString('mr-IN')}
+                {searchResult?.data?.createdAt ? new Date(searchResult.data.createdAt).toLocaleString('mr-IN') : ''}
               </span>
             </div>
             <div className="col-span-2">
               <span className="text-slate-500 block">समस्येचे ठिकाण:</span>
               <span className="font-medium text-slate-900 flex items-center gap-1 mt-0.5">
                 <MapPin className="w-3.5 h-3.5 text-orange-600" />
-                {searchResult.data.location}
+                {searchResult?.data?.location || ''}
               </span>
             </div>
             <div className="col-span-2">
               <span className="text-slate-500 block">तक्रारीचे सविस्तर वर्णन:</span>
               <p className="mt-1 text-slate-800 leading-relaxed font-sans bg-white p-3 rounded-lg border border-slate-200">
-                {searchResult.data.description}
+                {searchResult?.data?.description || ''}
               </p>
             </div>
           </div>
 
           {/* Administrative Resolution Block */}
-          {searchResult.data.resolution && (
+          {searchResult?.data?.resolution && (
             <div className="bg-emerald-50 border border-emerald-300 p-4 rounded-xl text-xs space-y-1">
               <div className="font-bold text-emerald-900 flex items-center gap-1.5">
                 <CheckCircle className="w-4 h-4 text-emerald-700" />
@@ -279,7 +279,7 @@ export default function TrackApplication() {
               <p className="text-emerald-800 leading-relaxed font-medium">
                 {searchResult.data.resolution}
               </p>
-              {searchResult.data.resolvedAt && (
+              {searchResult?.data?.resolvedAt && (
                 <div className="text-[10px] text-emerald-600 pt-1">
                   निवारण दिनांक: {new Date(searchResult.data.resolvedAt).toLocaleDateString('mr-IN')}
                 </div>

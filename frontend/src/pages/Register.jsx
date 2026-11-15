@@ -5,7 +5,8 @@ import { apiRequest } from '../utils/api';
 import { UserPlus, Phone, Mail, KeyRound, ShieldCheck, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function Register() {
-  const { login } = useAuth();
+  // 👇 येथे '|| {}' सेफ्टी चेक लावला आहे
+  const { login } = useAuth() || {};
   const navigate = useNavigate();
 
   // Step 1: Citizen Details & Request OTP
@@ -59,14 +60,14 @@ export default function Register() {
 
     setLoading(false);
 
-    if (res.success) {
+    if (res && res.success) {
       setStep(2);
-      setSuccessMsg(res.message);
+      setSuccessMsg(res.message || 'ओटीपी पाठवला आहे.');
       if (res.demoOtp) {
         setDemoOtpNotice(res.demoOtp);
       }
     } else {
-      setErrorMsg(res.message || 'ओटीपी पाठवण्यात त्रुटी उद्भवली.');
+      setErrorMsg(res?.message || 'ओटीपी पाठवण्यात त्रुटी उद्भवली.');
     }
   };
 
@@ -88,9 +89,9 @@ export default function Register() {
       body: JSON.stringify({ identifier: formData.mobile, otp: otpInput.trim() })
     });
 
-    if (!otpRes.success) {
+    if (!otpRes || !otpRes.success) {
       setLoading(false);
-      setErrorMsg(otpRes.message || 'अवैध ओटीपी कोड.');
+      setErrorMsg(otpRes?.message || 'अवैध ओटीपी कोड.');
       return;
     }
 
@@ -109,11 +110,11 @@ export default function Register() {
 
     setLoading(false);
 
-    if (regRes.success && regRes.token && regRes.user) {
-      login(regRes.user, regRes.token);
+    if (regRes && regRes.success && regRes.token && regRes.user) {
+      if (login) login(regRes.user, regRes.token);
       navigate('/dashboard');
     } else {
-      setErrorMsg(regRes.message || 'नोंदणी अयशस्वी. कृपया पुन्हा प्रयत्न करा.');
+      setErrorMsg(regRes?.message || 'नोंदणी अयशस्वी. कृपया पुन्हा प्रयत्न करा.');
     }
   };
 
@@ -306,7 +307,7 @@ export default function Register() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="w-full text-center text-xs text-slate-500 hover:underline"
+              className="w-full text-center text-xs text-slate-500 hover:underline cursor-pointer"
             >
               मागे जा व मोबाईल क्रमांक बदला
             </button>
