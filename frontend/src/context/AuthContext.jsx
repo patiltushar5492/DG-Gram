@@ -1,57 +1,62 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiRequest } from '../utils/api';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('dg_gram_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [token, setToken] = useState(() => localStorage.getItem('dg_gram_token') || null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // अ‍ॅप लोड झाल्यावर किंवा पेज रिफ्रेश झाल्यावर localStorage मधून युझर डेटा तपासा
   useEffect(() => {
-    // Validate session if token exists
-    if (token) {
-      apiRequest('/auth/me')
-        .then(res => {
-          if (res.success && res.user) {
-            setUser(res.user);
-            localStorage.setItem('dg_gram_user', JSON.stringify(res.user));
-          } else {
-            logout();
-          }
-        })
-        .finally(() => setLoading(false));
-    } else {
+    try {
+      const token = localStorage.getItem('dg_gram_token') || localStorage.getItem('token');
+      const savedUser = localStorage.getItem('dg_gram_user');
+
+      if (token && savedUser && savedUser !== 'undefined') {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (err) {
+      console.error('Auth load error:', err);
+      localStorage.removeItem('dg_gram_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('dg_gram_user');
+    } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
-  const login = (userData, userToken) => {
-    setUser(userData);
-    setToken(userToken);
-    localStorage.setItem('dg_gram_user', JSON.stringify(userData));
-    localStorage.setItem('dg_gram_token', userToken);
+  // लॉगिन फंक्शन: टोकन आणि युझर डेटा दोन्ही सेव्ह करा
+  const login = (userData, token) => {
+    if (token) {
+      localStorage.setItem('dg_gram_token', token);
+      localStorage.setItem('token', token); // compatibility backup
+    }
+    if (userData) {
+      localStorage.setItem('dg_gram_user', JSON.stringify(userData));
+      setUser(userData);
+    }
   };
 
+  // लॉगआउट फंक्शन: सर्व डेटा क्लियर करा
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('dg_gram_user');
     localStorage.removeItem('dg_gram_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('dg_gram_user');
+    setUser(null);
+    window.location.href = '/login'; // रिफ्रेश करून लॉगिन पेजवर पाठवा
   };
-
-  const isAdmin = user && user.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, token, isAdmin, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    return { user: null, login: () => {}, logout: () => {}, loading: false };
+  }
+  return context;
 }
