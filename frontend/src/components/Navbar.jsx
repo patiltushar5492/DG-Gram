@@ -18,12 +18,13 @@ import {
 } from 'lucide-react';
 
 export default function Navbar() {
-  const { user, isAdmin, logout } = useAuth();
+  // 👇 येथे '|| {}' लावल्यामुळे useAuth() कधीही null असला तरी ॲप क्रॅश होणार नाही
+  const { user, isAdmin, logout } = useAuth() || {};
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    if (logout) logout();
     navigate('/');
   };
 
@@ -56,7 +57,6 @@ export default function Navbar() {
       {/* Main Branding Header */}
       <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-3 group">
-          {/* Authentic Emblem / Seal Icon */}
           <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">
             <Landmark className="w-7 h-7" />
           </div>
@@ -75,7 +75,8 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-xl">
               <div className="text-right">
-                <div className="text-xs font-bold text-slate-800">{user.name}</div>
+                {/* 👇 user?.name केल्यामुळे null असताना एरर येत नाही */}
+                <div className="text-xs font-bold text-slate-800">{user?.name}</div>
                 <div className="text-[10px] uppercase font-semibold text-orange-600 tracking-wider">
                   {isAdmin ? 'प्रशासक (Admin)' : 'नागरिक (Citizen)'}
                 </div>
@@ -198,7 +199,7 @@ export default function Navbar() {
             {user ? (
               <>
                 <div className="text-xs font-semibold text-slate-500 px-1">
-                  लॉगिन केलेला वापरकर्ता: {user.name} ({isAdmin ? 'Admin' : 'Citizen'})
+                  लॉगिन केलेला वापरकर्ता: {user?.name} ({isAdmin ? 'Admin' : 'Citizen'})
                 </div>
                 {isAdmin ? (
                   <Link
