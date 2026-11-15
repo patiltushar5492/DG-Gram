@@ -82,11 +82,11 @@ export default function Login() {
     }
   };
 
-  // Quick fill default admin credentials helper for easy testing
-  const fillAdmin = () => {
-    setEmail('admin@grampanchayat.gov.in');
-    setPassword('Admin@123');
-  };
+  // // Quick fill default admin credentials helper for easy testing
+  // const fillAdmin = () => {
+  //   setEmail('admin@grampanchayat.gov.in');
+  //   setPassword('Admin@123');
+  // };
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
