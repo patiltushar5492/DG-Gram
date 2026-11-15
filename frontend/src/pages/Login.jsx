@@ -48,11 +48,12 @@ export default function Login() {
         }
         navigate('/dashboard');
       } else {
-        setErrorMsg(res?.message || 'लॉगिन अयशस्वी. कृपया तपशील तपासा.');
+        setErrorMsg(res?.message || 'लॉगिन अयशस्वी. कृपया मोबाईल क्रमांक किंवा पासवर्ड तपासा.');
       }
     } catch (err) {
       setLoading(false);
-      setErrorMsg('सर्व्हरशी संपर्क होऊ शकला नाही.');
+      console.error('Login error:', err);
+      setErrorMsg('सर्व्हरशी संपर्क होऊ शकला नाही. कृपया पुन्हा प्रयत्न करा.');
     }
   };
 
@@ -87,7 +88,7 @@ export default function Login() {
             <input
               type="text"
               name="identifier"
-              placeholder="उदा. मोबाईल नंबर किंवा ईमेल"
+              placeholder="उदा. ९८२३०००००० किंवा email@gmail.com"
               value={formData.identifier}
               onChange={handleChange}
               required
@@ -115,7 +116,7 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 text-sm flex items-center justify-center gap-2 mt-2"
           >
-            <span>{loading ? 'लॉगिन होत आहे...' : 'लॉगिन करा'}</span>
+            <span>{loading ? 'लॉगिन होत आहे...' : 'लॉगिन करा (Sign In)'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
@@ -123,7 +124,7 @@ export default function Login() {
         <div className="pt-4 text-center text-xs text-slate-500 border-t border-slate-100">
           खाते नाहीये का?{' '}
           <Link to="/register" className="text-orange-600 font-bold hover:underline">
-            येथे नोंदणी करा
+            येथे नवीन नोंदणी करा
           </Link>
         </div>
 

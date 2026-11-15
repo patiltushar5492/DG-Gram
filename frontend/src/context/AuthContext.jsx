@@ -6,13 +6,13 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('dg_gram_user');
-    if (savedUser) {
-      try {
+    try {
+      const savedUser = localStorage.getItem('dg_gram_user');
+      if (savedUser && savedUser !== 'undefined') {
         setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error(e);
       }
+    } catch (e) {
+      console.error(e);
     }
   }, []);
 
