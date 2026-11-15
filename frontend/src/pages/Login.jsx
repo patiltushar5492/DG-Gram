@@ -1,98 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../utils/api';
-import { Lock, Mail, RefreshCw, ShieldCheck, AlertCircle, KeyRound, CheckCircle } from 'lucide-react';
+import { LogIn, Phone, KeyRound, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function Login() {
-  // 👇 येथे '|| {}' सेफ्टी चेक जोडला आहे
-  const { login, user } = useAuth() || {};
+  // AuthContext मधून login फंक्शन सुरक्षितपणे घेणे
+  const { login } = useAuth() || {};
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [captchaInput, setCaptchaInput] = useState('');
-  const [captchaData, setCaptchaData] = useState({ captchaId: '', captchaSvg: '' });
-  
+  const [formData, setFormData] = useState({
+    identifier: '',
+    password: ''
+  });
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const loadCaptcha = async () => {
-    const res = await apiRequest('/auth/captcha');
-    if (res.success) {
-      setCaptchaData({
-        captchaId: res.captchaId,
-        captchaSvg: res.captchaSvg
-      });
-      setCaptchaInput('');
-    }
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  useEffect(() => {
-    loadCaptcha();
-    if (user) {
-      if (user.role === 'admin') navigate('/admin');
-      else navigate('/dashboard');
-    }
-  }, [user]);
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email || !password) {
-      setErrorMsg('कृपया ईमेल व पासवर्ड टाका.');
-      return;
-    }
-
-    if (!captchaInput) {
-      setErrorMsg('कृपया सुरक्षा कॅप्चा कोड टाका.');
+    if (!formData.identifier || !formData.password) {
+      setErrorMsg('कृपया मोबाईल क्रमांक / ईमेल आणि पासवर्ड प्रविष्ट करा.');
       return;
     }
 
     setLoading(true);
-    const res = await apiRequest('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({
-        email: email.trim(),
-        password,
-        captchaId: captchaData.captchaId,
-        captchaCode: captchaInput.trim()
-      })
-    });
 
-    setLoading(false);
+    try {
+      const res = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          identifier: formData.identifier.trim(),
+          password: formData.password
+        })
+      });
 
-    if (res.success && res.token && res.user) {
-      localStorage.setItem('token', res.token);
-      localStorage.setItem('user', JSON.stringify(res.user));
+      setLoading(false);
 
-      if (login) login(res.user, res.token);
+      if (res && res.success && res.token && res.user) {
+        // १. सर्वात महत्त्वाचे: AuthContext मधील login फंक्शन कॉल करणे
+        if (login) {
+          login(res.user, res.token);
+        }
 
-      if (res.user.role === 'admin') {
-        navigate('/admin');
-      } else {
+        // २. सर्व बॅकअप की मध्ये टोकन आणि युजर डेटा सेव्ह करणे जेणेकरून कधीही एरर येणार नाही
+        localStorage.setItem('dg_gram_token', res.token);
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('dg_gram_user', JSON.stringify(res.user));
+
+        // ३. यशस्वी लॉगिन झाल्यावर डॅशबोर्डवर रीडायरेक्ट करणे
         navigate('/dashboard');
+      } else {
+        setErrorMsg(res?.message || 'लॉगिन अयशस्वी. कृपया मोबाईल क्रमांक किंवा पासवर्ड तपासा.');
       }
-    } else {
-      setErrorMsg(res.message || 'लॉगिन अयशस्वी. कृपया तपशील तपासा.');
-      loadCaptcha();
+    } catch (err) {
+      setLoading(false);
+      console.error('Login error:', err);
+      setErrorMsg('सर्व्हरशी संपर्क होऊ शकला नाही. कृपया पुन्हा प्रयत्न करा.');
     }
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-12">
+    <div className="max-w-md mx-auto px-4 py-16">
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xl space-y-6">
         
+        {/* Header */}
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center mx-auto shadow-md">
-            <Lock className="w-7 h-7" />
+            <LogIn className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-black text-slate-900">
-            पोर्टल लॉगिन (Portal Login)
+            नागरिक / प्रशासक लॉगिन
           </h2>
           <p className="text-xs text-slate-500">
-            ग्रामपंचायत गाळण बुद्रुक ई-गव्हर्नन्स प्रणाली
+            ग्रामपंचायत गाळण बुद्रुक डिजिटल पोर्टल
           </p>
         </div>
 
@@ -103,18 +90,19 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              ईमेल आयडी (Email ID) *
+              मोबाईल क्रमांक किंवा ईमेल (Mobile / Email) *
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
-                type="email"
-                placeholder="उदा. admin@grampanchayat.gov.in"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                name="identifier"
+                placeholder="उदा. ९८२३०००००० किंवा email@gmail.com"
+                value={formData.identifier}
+                onChange={handleChange}
                 required
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:bg-white"
               />
@@ -122,72 +110,42 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              पासवर्ड (Password) *
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-xs font-bold text-slate-700">
+                पासवर्ड (Password) *
+              </label>
+            </div>
             <div className="relative">
               <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
+                name="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleChange}
                 required
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:bg-white"
               />
             </div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl space-y-2">
-            <label className="block text-xs font-bold text-slate-700">
-              सुरक्षा कॅप्चा पडताळणी (Security Captcha) *
-            </label>
-
-            <div className="flex items-center gap-3">
-              <div className="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs">
-                {captchaData.captchaSvg ? (
-                  <img src={captchaData.captchaSvg} alt="Captcha" className="h-10 w-36 object-contain" />
-                ) : (
-                  <div className="h-10 w-36 bg-slate-100 flex items-center justify-center text-xs text-slate-400">
-                    लोड होत आहे...
-                  </div>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={loadCaptcha}
-                title="नवीन कॅप्चा मिळवा"
-                className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            </div>
-
-            <input
-              type="text"
-              placeholder="वरील कोड येथे टाका (Enter Captcha)"
-              value={captchaInput}
-              onChange={(e) => setCaptchaInput(e.target.value)}
-              required
-              className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 font-mono font-bold tracking-wider uppercase"
-            />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 text-sm"
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 text-sm flex items-center justify-center gap-2 mt-2"
           >
-            {loading ? 'पडताळणी होत आहे...' : 'सुरक्षित लॉगिन करा (Login)'}
+            <span>{loading ? 'लॉगिन होत आहे...' : 'लॉगिन करा (Sign In)'}</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
-        <div className="pt-2 text-center text-xs text-slate-500 border-t border-slate-100">
-          अद्याप खाते नाही का?{' '}
-          <Link to="/register" className="text-orange-600 font-bold hover:underline">
-            येथे नवीन नागरिक नोंदणी करा (Register with OTP)
-          </Link>
+        <div className="pt-4 text-center text-xs text-slate-500 border-t border-slate-100 space-y-2">
+          <div>
+            खाते नाहीये का?{' '}
+            <Link to="/register" className="text-orange-600 font-bold hover:underline">
+              येथे नवीन नोंदणी करा (Register)
+            </Link>
+          </div>
         </div>
 
       </div>
