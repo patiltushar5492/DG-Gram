@@ -1102,13 +1102,53 @@ const ensureDefaultAdmin = () => {
   }
 };
 
-// **सर्व्हर चालू होण्यापूर्वी हे फंक्शन इथे कॉल करा:**
+// सर्व्हर सुरू होण्यापूर्वी डीफॉल्ट Admin तयार करा
 ensureDefaultAdmin();
 
-// Start Server (हा भाग आधीपासूनच तुझ्या फाईलच्या शेवटी आहे)
+// ── 15-Day Auto-Cleanup Scheduler ───────────────────────────────────────────
+// मंजूर (approved) किंवा नाकारलेल्या (rejected) अर्जांची नोंद 15 दिवसांनंतर
+// आपोआप हटवते, जेणेकरून डेटाबेस स्वच्छ राहतो.
+function runAutoCleanup() {
+  try {
+    const db = getDB();
+    const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
+    const cutoffTime = Date.now() - FIFTEEN_DAYS_MS;
+
+    const beforeCount = db.applications ? db.applications.length : 0;
+
+    // Filter out applications that are approved/rejected AND older than 15 days
+    if (db.applications) {
+      db.applications = db.applications.filter((app) => {
+        const isFinalized = app.status === 'approved' || app.status === 'rejected';
+        const reviewedAt = app.reviewedAt ? new Date(app.reviewedAt).getTime() : 0;
+        const isOld = reviewedAt > 0 && reviewedAt < cutoffTime;
+        // Keep the record if it's NOT (finalized AND old)
+        return !(isFinalized && isOld);
+      });
+      saveDB(db);
+    }
+
+    const afterCount = db.applications ? db.applications.length : 0;
+    const removed = beforeCount - afterCount;
+    if (removed > 0) {
+      console.log(`🧹 Auto-Cleanup: ${removed} finalized application(s) older than 15 days removed.`);
+    } else {
+      console.log(`🧹 Auto-Cleanup: Nothing to remove. All records are within 15-day retention.`);
+    }
+  } catch (err) {
+    console.error('❌ Auto-Cleanup error:', err.message);
+  }
+}
+
+// Run cleanup once at startup, then every 60 minutes
+runAutoCleanup();
+setInterval(runAutoCleanup, 60 * 60 * 1000); // every hour
+
+// ── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`================================================================`);
-  console.log(`🏛️ Gram Panchayat Gadan Budruk Server Running on Port ${PORT}`);
-  console.log(`👉 Default Admin: admin@grampanchayat.gov.in / Admin@123`);
+  console.log(`🏛️  Gram Panchayat Gadan Budruk Server Running on Port ${PORT}`);
+  console.log(`👉  Default Admin : admin@grampanchayat.gov.in / Admin@123`);
+  console.log(`🧹  Auto-Cleanup  : Every 60 min (15-day retention policy)`);
   console.log(`================================================================`);
 });

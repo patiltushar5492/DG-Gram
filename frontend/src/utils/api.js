@@ -1,17 +1,32 @@
-export async function apiRequest(endpoint, options = {}) {
-  // इथे थेट Render ची लाईव्ह लिंक फॉलबॅक म्हणून दिली आहे, त्यामुळे लोकलहोस्टचा विषयच संपला!
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://dg-gram.onrender.com';
-  
-  const url = `${API_BASE_URL}/api${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+// ============================================================
+// API Utility — Centralized request helper for DG Gram Portal
+// ============================================================
 
-  const token = localStorage.getItem('token');
-  
-  // जर फॉर्ममध्ये फाईल (FormData) असेल तर Content-Type ऑटोमॅटिक हँडल होईल
+// Auto-detect environment: local dev uses Vite proxy (/api → localhost:5000)
+// Production (Vercel + Render) uses VITE_API_URL env variable
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
+/**
+ * Universal API request helper.
+ * - Attaches JWT token from localStorage automatically.
+ * - Handles both JSON and FormData (multipart file uploads).
+ * - Returns the parsed JSON response or an error object.
+ */
+export async function apiRequest(endpoint, options = {}) {
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE}${path}`;
+
+  // Always read the single authoritative token key
+  const token = localStorage.getItem('dg_gram_token');
+
   const isFormData = options.body instanceof FormData;
 
   const headers = {
+    // Don't set Content-Type for FormData — browser sets it with boundary automatically
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {})
   };
 
@@ -20,18 +35,22 @@ export async function apiRequest(endpoint, options = {}) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('API Error:', error);
-    return { success: false, message: 'सर्व्हरशी संपर्क साधण्यात त्रुटी आली.' };
+    console.error(`API Error on ${endpoint}:`, error);
+    return { success: false, message: 'सर्व्हरशी संपर्क साधण्यात त्रुटी आली. (Network error)' };
   }
 }
-  // <--- हा apiRequest चा शेवटचा ब्रॅकेट आहे, त्याच्या खाली हे टाक:
 
-    // 📌 इथे टाकायचं आहे (सगळ्यात शेवटी):
-    export const getFileUrl = (fileUrl) => {
-      if (!fileUrl) return '#';
-      if (fileUrl.startsWith('http') || fileUrl.startsWith('blob')) {
-        return fileUrl;
-      }
-      const cleanPath = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
-      return `https://dg-gram.onrender.com${cleanPath}`;
-    };
+/**
+ * Resolve an uploaded file URL to an absolute URL.
+ * Works in both local dev and production environments.
+ */
+export function getFileUrl(fileUrl) {
+  if (!fileUrl) return '#';
+  if (fileUrl.startsWith('http') || fileUrl.startsWith('blob')) return fileUrl;
+  const cleanPath = fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`;
+  if (import.meta.env.VITE_API_URL) {
+    return `${import.meta.env.VITE_API_URL}${cleanPath}`;
+  }
+  // Local dev: Vite proxies /uploads → localhost:5000
+  return cleanPath;
+}
