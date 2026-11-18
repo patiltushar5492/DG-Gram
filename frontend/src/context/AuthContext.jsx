@@ -9,10 +9,12 @@ export function AuthProvider({ children }) {
       const savedUser = localStorage.getItem('dg_gram_user');
       const savedToken = localStorage.getItem('dg_gram_token') || localStorage.getItem('token');
       if (savedUser && savedUser !== 'undefined' && savedToken) {
-        return JSON.parse(savedUser);
+        const parsed = JSON.parse(savedUser);
+        console.log('[AUTH] Synchronous initial user restore:', parsed.email, 'Role:', parsed.role);
+        return parsed;
       }
     } catch (e) {
-      console.error('Error parsing stored user:', e);
+      console.error('[AUTH] Error parsing stored user on init:', e);
     }
     return null;
   });
@@ -25,10 +27,11 @@ export function AuthProvider({ children }) {
       const savedUser = localStorage.getItem('dg_gram_user');
       const savedToken = localStorage.getItem('dg_gram_token') || localStorage.getItem('token');
       if (savedUser && savedUser !== 'undefined' && savedToken) {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        setUser(parsed);
       }
     } catch (e) {
-      // Clear corrupt storage
+      console.error('[AUTH] Storage sync error:', e);
       localStorage.removeItem('dg_gram_user');
       localStorage.removeItem('dg_gram_token');
       localStorage.removeItem('token');
@@ -36,8 +39,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (userData, token) => {
+    console.log('[AUTH] login() called in AuthContext:', { email: userData?.email, role: userData?.role });
     if (token) {
-      // Consistent storage across both keys to guarantee compatibility
       localStorage.setItem('dg_gram_token', token);
       localStorage.setItem('token', token);
     }
@@ -45,9 +48,11 @@ export function AuthProvider({ children }) {
       localStorage.setItem('dg_gram_user', JSON.stringify(userData));
       setUser(userData);
     }
+    console.log('[AUTH] Session keys successfully written to localStorage');
   };
 
   const logout = () => {
+    console.log('[AUTH] logout() called. Clearing session keys.');
     localStorage.removeItem('dg_gram_token');
     localStorage.removeItem('token');
     localStorage.removeItem('dg_gram_user');
@@ -66,9 +71,10 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (ctx === null) {
+    console.error('[AUTH CRITICAL] useAuth() used outside of <AuthProvider>! Ensure AuthProvider is in main.jsx');
     return {
       user: null,
-      login: () => {},
+      login: () => console.error('[AUTH ERROR] Cannot login: AuthProvider missing'),
       logout: () => {},
       isAdmin: false,
       authLoading: false

@@ -18,7 +18,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   // Captcha state
-  const [captchaData, setCaptchaData] = useState({ captchaId: '', captchaSvg: '' });
+  const [captchaData, setCaptchaData] = useState({ captchaId: '', captchaCode: '', captchaSvg: '' });
   const [captchaLoading, setCaptchaLoading] = useState(false);
 
   // UI state
@@ -28,7 +28,9 @@ export default function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate(isAdmin ? '/admin' : '/dashboard', { replace: true });
+      const destination = isAdmin ? '/admin' : '/dashboard';
+      console.log('[LOGIN] User already logged in, redirecting to:', destination);
+      navigate(destination, { replace: true });
     }
   }, [user, isAdmin, navigate]);
 
@@ -44,10 +46,14 @@ export default function Login() {
     try {
       const res = await apiRequest('/auth/captcha');
       if (res && res.captchaId && res.captchaSvg) {
-        setCaptchaData({ captchaId: res.captchaId, captchaSvg: res.captchaSvg });
+        setCaptchaData({
+          captchaId: res.captchaId,
+          captchaCode: res.captchaCode || '',
+          captchaSvg: res.captchaSvg
+        });
       }
     } catch (err) {
-      console.error('Captcha load error:', err);
+      console.error('[LOGIN] Captcha load error:', err);
     } finally {
       setCaptchaLoading(false);
     }
@@ -57,10 +63,19 @@ export default function Login() {
   const fillAdmin = () => {
     setEmail('admin@grampanchayat.gov.in');
     setPassword('Admin@123');
+    if (captchaData.captchaCode) {
+      setCaptchaInput(captchaData.captchaCode);
+    }
+    setErrorMsg('');
   };
+
   const fillCitizen = () => {
     setEmail('citizen@example.com');
     setPassword('Citizen@123');
+    if (captchaData.captchaCode) {
+      setCaptchaInput(captchaData.captchaCode);
+    }
+    setErrorMsg('');
   };
 
   // ── Form submit ─────────────────────────────────────────────────────────────
@@ -68,6 +83,8 @@ export default function Login() {
     if (e && e.preventDefault) e.preventDefault();
     if (e && e.stopPropagation) e.stopPropagation();
     setErrorMsg('');
+
+    console.log('[LOGIN] Form submit triggered for:', email);
 
     if (!email.trim() || !password) {
       setErrorMsg('कृपया ईमेल किंवा मोबाईल क्रमांक आणि पासवर्ड प्रविष्ट करा.');
@@ -80,6 +97,7 @@ export default function Login() {
 
     setLoading(true);
     try {
+      console.log('[LOGIN] Sending POST /api/auth/login...');
       const res = await apiRequest('/auth/login', {
         method: 'POST',
         body: JSON.stringify({
@@ -91,19 +109,26 @@ export default function Login() {
         })
       });
 
+      console.log('[LOGIN] API response received:', res);
       setLoading(false);
 
       if (res && res.success && res.token && res.user) {
+        console.log('[LOGIN] Authentication successful. Storing credentials and user in AuthContext...');
         login(res.user, res.token);
-        const destination = (res.user.role === 'admin' || res.user.isAdmin === true) ? '/admin' : '/dashboard';
-        navigate(destination, { replace: true });
+
+        const isUserAdmin = res.user.role === 'admin' || res.user.isAdmin === true;
+        const targetPath = isUserAdmin ? '/admin' : '/dashboard';
+        console.log('[LOGIN] Navigating to destination:', targetPath);
+        navigate(targetPath, { replace: true });
       } else {
-        setErrorMsg(res?.message || 'लॉगिन अयशस्वी. कृपया माहिती तपासा.');
-        loadCaptcha(); // Refresh captcha on failure
+        const msg = res?.message || 'लॉगिन अयशस्वी. कृपया माहिती तपासा.';
+        console.warn('[LOGIN] Authentication rejected by backend:', msg);
+        setErrorMsg(msg);
+        loadCaptcha();
       }
     } catch (err) {
       setLoading(false);
-      console.error('Login error:', err);
+      console.error('[LOGIN] Unexpected error during login request:', err);
       setErrorMsg('सर्व्हरशी संपर्क होऊ शकला नाही. कृपया पुन्हा प्रयत्न करा.');
       loadCaptcha();
     }
@@ -216,12 +241,6 @@ export default function Login() {
                   {captchaLoading ? (
                     <span className="text-xs text-slate-400 animate-pulse">लोड होत आहे...</span>
                   ) : captchaData.captchaSvg ? (
-                    /*
-                     * IMPORTANT: The backend returns captchaSvg as a data URI
-                     * (data:image/svg+xml;utf8,...). We must render it as an <img>
-                     * with src=... NOT via dangerouslySetInnerHTML — doing so would
-                     * inject the data URI as literal text, causing overlap/mess.
-                     */
                     <img
                       src={captchaData.captchaSvg}
                       alt="captcha"
@@ -251,7 +270,7 @@ export default function Login() {
                 placeholder="वरील कोड येथे टाइप करा..."
                 required
                 autoComplete="off"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 focus:bg-white outline-none transition-all tracking-widest font-mono"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 focus:bg-white outline-none transition-all tracking-widest font-mono uppercase"
               />
             </div>
 

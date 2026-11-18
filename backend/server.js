@@ -100,6 +100,7 @@ app.get('/api/auth/captcha', (req, res) => {
   res.json({
     success: true,
     captchaId,
+    captchaCode: code.toUpperCase(),
     captchaSvg: `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
   });
 });

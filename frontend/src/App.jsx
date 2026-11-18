@@ -28,8 +28,10 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />
           <Route path="/government-grs" element={<GovernmentGRs />} />
+          <Route path="/government-gr" element={<GovernmentGRs />} />
           <Route path="/development" element={<Development />} />
           <Route path="/grievances" element={<Grievances />} />
+          <Route path="/complaints" element={<Grievances />} />
           <Route path="/about" element={<About />} />
           <Route path="/track-application" element={<TrackApplication />} />
           <Route path="/login" element={<Login />} />
