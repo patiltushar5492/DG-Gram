@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../utils/api';
+import { apiRequest, getGRDownloadUrl } from '../utils/api';
 import { 
   FileText, 
   Download, 
@@ -59,13 +59,24 @@ export default function GovernmentGRs() {
     fetchGRs();
   };
 
-  // Open direct printable official document in new window
-  const handleOpenGR = (gr) => {
-    if (gr && gr.id) {
-      window.open(`/api/government-grs/${gr.id}/download`, '_blank');
-    }
+  // ── Resolve the absolute backend URL for GR download/view ───────────────────
+  // CRITICAL: window.open() opens a NEW tab with NO Vite proxy.
+  // Therefore we MUST use the full backend origin, not the /api proxy path.
+  // In production, VITE_API_URL is the Render backend URL.
+  // In local dev, we always hit http://localhost:5000 directly.
+  const getGRDownloadUrl = (gr) => {
+    if (!gr || !gr.id) return '#';
+    const backendOrigin = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${backendOrigin}/api/government-grs/${gr.id}/download`;
   };
 
+  // Open the official GR document in a new browser tab
+  const handleOpenGR = (gr) => {
+    const url = getGRDownloadUrl(gr);
+    if (url !== '#') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
   // Trigger modal preview
   const handlePreview = (gr) => {
     setActivePreviewGR(gr);

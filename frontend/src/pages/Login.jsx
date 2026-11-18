@@ -213,10 +213,18 @@ export default function Login() {
                   {captchaLoading ? (
                     <span className="text-xs text-slate-400 animate-pulse">लोड होत आहे...</span>
                   ) : captchaData.captchaSvg ? (
-                    <div
-                      dangerouslySetInnerHTML={{ __html: captchaData.captchaSvg }}
-                      className="w-full"
-                      style={{ lineHeight: 0 }}
+                    /*
+                     * IMPORTANT: The backend returns captchaSvg as a data URI
+                     * (data:image/svg+xml;utf8,...). We must render it as an <img>
+                     * with src=... NOT via dangerouslySetInnerHTML — doing so would
+                     * inject the data URI as literal text, causing overlap/mess.
+                     */
+                    <img
+                      src={captchaData.captchaSvg}
+                      alt="captcha"
+                      className="w-full h-auto block select-none pointer-events-none"
+                      draggable={false}
+                      style={{ minHeight: 50, maxHeight: 60 }}
                     />
                   ) : (
                     <span className="text-xs text-slate-400">कॅप्चा उपलब्ध नाही</span>
