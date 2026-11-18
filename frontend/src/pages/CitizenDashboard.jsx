@@ -21,11 +21,11 @@ import {
   Sparkles,
   Building
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function CitizenDashboard() {
-  // 👇 useAuth() मधून डेटा काढताना '|| {}' सेफ्टी चेक जोडला आहे
-  const { user } = useAuth() || {};
+  const { user, authLoading } = useAuth() || {};
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [grievances, setGrievances] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,8 +48,15 @@ export default function CitizenDashboard() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+    const token = localStorage.getItem('dg_gram_token') || localStorage.getItem('token');
+    const storedUser = localStorage.getItem('dg_gram_user');
+    if (!token && !user && !storedUser) {
+      navigate('/login', { replace: true });
+      return;
+    }
     loadData();
-  }, [user]);
+  }, [user, authLoading]);
 
   // Approved certificates filter
   const approvedApplications = applications.filter(a => a?.status === 'approved');

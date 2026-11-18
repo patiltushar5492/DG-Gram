@@ -199,12 +199,14 @@ app.post('/api/auth/register', (req, res) => {
 
 // Login
 app.post('/api/auth/login', (req, res) => {
-  const { email, password, captchaId, captchaCode } = req.body;
+  const { email, identifier, username, password, captchaId, captchaCode } = req.body;
+  const loginId = (email || identifier || username || '').trim();
 
-  if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'ईमेल व पासवर्ड टाकणे आवश्यक आहे.' });
+  if (!loginId || !password) {
+    return res.status(400).json({ success: false, message: 'ईमेल / मोबाईल क्रमांक व पासवर्ड टाकणे आवश्यक आहे.' });
   }
 
+  // Validate Captcha if provided
   if (captchaId && captchaCode) {
     const storedCaptcha = captchaStore.get(captchaId);
     if (!storedCaptcha || storedCaptcha.code !== captchaCode.trim().toUpperCase()) {
@@ -214,10 +216,14 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   const db = getDB();
-  const user = db.users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+  const searchId = loginId.toLowerCase();
+  const user = (db.users || []).find(u => 
+    (u.email && u.email.toLowerCase() === searchId) || 
+    (u.mobile && u.mobile.trim() === loginId)
+  );
 
   if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
-    return res.status(400).json({ success: false, message: 'अवैध ईमेल किंवा पासवर्ड.' });
+    return res.status(400).json({ success: false, message: 'अवैध ईमेल/मोबाईल क्रमांक किंवा पासवर्ड.' });
   }
 
   const token = jwt.sign(
@@ -236,7 +242,8 @@ app.post('/api/auth/login', (req, res) => {
       email: user.email,
       role: user.role,
       mobile: user.mobile,
-      address: user.address || ''
+      address: user.address || '',
+      isAdmin: user.role === 'admin'
     }
   });
 });

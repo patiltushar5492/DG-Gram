@@ -3,30 +3,43 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  // Synchronous initialization prevents any "null user" flicker or race conditions on page load/navigation
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('dg_gram_user');
+      const savedToken = localStorage.getItem('dg_gram_token') || localStorage.getItem('token');
+      if (savedUser && savedUser !== 'undefined' && savedToken) {
+        return JSON.parse(savedUser);
+      }
+    } catch (e) {
+      console.error('Error parsing stored user:', e);
+    }
+    return null;
+  });
 
-  // On mount: restore session from localStorage
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // Synchronize on mount and handle storage events
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem('dg_gram_user');
-      const savedToken = localStorage.getItem('dg_gram_token');
+      const savedToken = localStorage.getItem('dg_gram_token') || localStorage.getItem('token');
       if (savedUser && savedUser !== 'undefined' && savedToken) {
         setUser(JSON.parse(savedUser));
       }
     } catch (e) {
-      // Corrupted storage — clear it
+      // Clear corrupt storage
       localStorage.removeItem('dg_gram_user');
       localStorage.removeItem('dg_gram_token');
-    } finally {
-      setAuthLoading(false);
+      localStorage.removeItem('token');
     }
   }, []);
 
   const login = (userData, token) => {
     if (token) {
-      // Store under a single consistent key; api.js reads 'dg_gram_token'
+      // Consistent storage across both keys to guarantee compatibility
       localStorage.setItem('dg_gram_token', token);
+      localStorage.setItem('token', token);
     }
     if (userData) {
       localStorage.setItem('dg_gram_user', JSON.stringify(userData));
@@ -36,11 +49,12 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('dg_gram_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('dg_gram_user');
     setUser(null);
   };
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = Boolean(user && (user.role === 'admin' || user.isAdmin === true));
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAdmin, authLoading }}>
@@ -52,9 +66,13 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (ctx === null) {
-    // Called outside provider — return safe defaults instead of throwing
-    console.warn('useAuth() called outside <AuthProvider>');
-    return { user: null, login: () => {}, logout: () => {}, isAdmin: false, authLoading: false };
+    return {
+      user: null,
+      login: () => {},
+      logout: () => {},
+      isAdmin: false,
+      authLoading: false
+    };
   }
   return ctx;
 }

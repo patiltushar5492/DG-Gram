@@ -42,7 +42,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function AdminDashboard() {
   // 👇 येथे सेफ्टी चेक लावला आहे
-  const { user, isAdmin } = useAuth() || {};
+  const { user, isAdmin, authLoading } = useAuth() || {};
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('applications');
@@ -109,12 +109,27 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    if (isAdmin === false) {
-      navigate('/login');
+    if (authLoading) return;
+
+    // Robust check against both React context and localStorage
+    const token = localStorage.getItem('dg_gram_token') || localStorage.getItem('token');
+    const storedUserStr = localStorage.getItem('dg_gram_user');
+    let isUserAdmin = isAdmin;
+
+    if (!isUserAdmin && storedUserStr) {
+      try {
+        const u = JSON.parse(storedUserStr);
+        isUserAdmin = u?.role === 'admin' || u?.isAdmin === true;
+      } catch (e) {}
+    }
+
+    if (!token || !isUserAdmin) {
+      navigate('/login', { replace: true });
       return;
     }
+
     loadAllData();
-  }, [isAdmin]);
+  }, [isAdmin, authLoading]);
 
   const isForm8 = (app) => {
     if (!app) return false;
